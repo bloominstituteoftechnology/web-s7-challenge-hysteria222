@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import * as yup from 'yup'
+import axios from 'axios'
 
 // 👇 Here are the validation errors you will use with Yup.
 const validationErrors = {
@@ -11,46 +12,64 @@ const validationErrors = {
 // 👇 Here you will create your schema.
 
 const formSchema = yup.object().shape({
-  fullName: yup.string().trim()
-    .min(3, 'full name must be at least 3 characters')
-    .max(20, 'full name must be at most 20 characters')
-    .required(), 
+  fullName: yup.string()
+    .min(3,validationErrors.fullNameTooShort)
+    .max(20, validationErrors.fullNameTooLong),
   size: yup.string()
-    .oneOf(['S', 'M', 'L]', ], validationErrors.sizeIncorrect)
-    .required()
+    .oneOf(['S', 'M', 'L]', ], validationErrors.sizeIncorrect),
+  pepperoni: yup.boolean(),
+  greenPeppers:  yup.boolean(),
+  pineapple:  yup.boolean(),
+  mushrooms:  yup.boolean(),
+  ham:  yup.boolean(),
 })
 
 // 👇 This array could help you construct your checkboxes using .map in the JSX.
 const toppings = [
-  { topping_id: '1', text: 'Pepperoni' },
-  { topping_id: '2', text: 'Green Peppers' },
-  { topping_id: '3', text: 'Pineapple' },
-  { topping_id: '4', text: 'Mushrooms' },
-  { topping_id: '5', text: 'Ham' },
+  { topping_id: '1', text: 'pepperoni' },
+  { topping_id: '2', text: 'greenPeppers' },
+  { topping_id: '3', text: 'pineapple' },
+  { topping_id: '4', text: 'mushrooms' },
+  { topping_id: '5', text: 'ham' },
 ]
 
-const intitialValues = {
-  fullName: '',
-  size: '',
-  toppings: [], 
-}
 
-const intitialErrors = {
-  
-}
 
 export default function Form() {
-  const [values, setValues] = useState(intitialValues)
-  const [errors, setErrors] = useState()
+  const [values, setValues] = useState({ 
+    fullName: '',
+    size: '',
+    pepperoni: false,
+    greenPeppers: false, 
+    pineapple: false, 
+    mushrooms: false, 
+    ham: false
+  })
+  const [errors, setErrors] = useState({
+    fullName: '',
+    size: '',
+  })
   const [success, setSuccess] = useState()
   const [failure, setFailure] = useState()
+  const [enabled, setEnabled] = useState(false)
 
-  const handleChange = (evt) => {
-    let { type, checked, name, value } = evt.target;
-    if (type === "checkbox") value = checked;
-    setValues({ ...values, [name]: value });
-    
-    yup
+
+  useEffect(() => {
+    formSchema.isValid(values).then((isValid) => {
+      setEnabled(isValid);
+    });
+  }, [values]);
+
+
+  const handleChange = evt => {
+    let { type, checked, name, value } = evt.target 
+    if (type === "checkbox") value = checked
+    console.log(value)
+    setValues({
+      ...values, 
+      [name]: value
+    })
+    yup 
       .reach(formSchema, name)
       .validate(value)
       .then(() => {
@@ -58,37 +77,59 @@ export default function Form() {
       })
       .catch((err) => {
         setErrors({ ...errors, [name]: err.errors[0] });
+        });
+  }
+
+  const createPayload = () => { 
+    const aa = []
+   
+   }
+   console.log(aa)
+   return aa
+  }
+
+  
+  const handleSubmit = (evt) => {
+    evt.preventDefault();
+    const payload = createPayload()
+    axios
+      .post("http://localhost:9009/api/order", )
+      .then((res) => {
+        setSuccess(res.data.message);
+        setFailure("");
+      })
+      .catch((err) => {
+        setFailure(err.response);
+        setSuccess("");
       });
-    }
-
-
+  };
 
   return (
-    <form>
+    <form onSubmit={handleSubmit}>
       <h2>Order Your Pizza</h2>
-      {success && <div className='success'>Thank you for your order!</div>}
-      {failure  && <div className='failure'>Something went wrong</div>}
+      {success && <div className='success'>{success}</div>}
+      {failure  && <div className='failure'>{failure}</div>}
 
-      <div className="input-group" onChange={handleChange}>
+      <div className="input-group" >
         <div>
           <label htmlFor="fullName">Full Name</label><br />
-          <input placeholder="Type full name" id="fullName" type="text" />
+          <input placeholder="Type full name" id="fullName" type="text" name={"fullName"} onChange={handleChange} value={values.fullName}/>
         </div>
-        {errors && <div className='error'>Bad value</div>}
+        {errors.fullName && <div className='error'>{errors.fullName}</div>}
       </div>
 
       <div className="input-group">
         <div>
           <label htmlFor="size">Size</label><br />
-          <select id="size">
+          <select id="size" name={"size"} onChange={handleChange} value={values.size}>
             <option value="">----Choose Size----</option>
             {/* Fill out the missing options */}
-            <option value="1">S</option>
-            <option value="2">M</option>
-            <option value="3">L</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
           </select>
         </div>
-        {errors && <div className='error'>Bad value</div>}
+        {errors.size && <div className='error'>{errors.size}</div>}
       </div>
 
       <div className="input-group">
@@ -96,10 +137,15 @@ export default function Form() {
         
        {toppings.map((topping) => {
         return (
-          <label key={topping.id}>
+          <label>
           <input
             name={topping.text}
             type="checkbox"
+            key={topping.id}
+            onChange={handleChange} 
+            checked={values[topping.text]}
+            value={values[topping.text]}
+            
           />
           {topping.text}<br />
         </label>
@@ -109,7 +155,7 @@ export default function Form() {
 
       </div>
       {/* 👇 Make sure the submit stays disabled until the form validates! */}
-      <input type="submit" />
+      <input type="submit" disabled={!enabled} />
     </form>
   )
 }
