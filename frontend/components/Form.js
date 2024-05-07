@@ -33,7 +33,15 @@ const toppings = [
   { topping_id: '5', text: 'ham' },
 ]
 
-
+const intitValues = {
+  fullName: '',
+  size: '',
+  pepperoni: false,
+  greenPeppers: false, 
+  pineapple: false, 
+  mushrooms: false, 
+  ham: false
+}
 
 export default function Form() {
   const [values, setValues] = useState({ 
@@ -109,11 +117,14 @@ export default function Form() {
       .then((res) => {
         setSuccess(res.data.message);
         setFailure("");
+        setValues(intitValues)
       })
       .catch((err) => {
         setFailure(err.response);
         setSuccess("");
+
       });
+      
   };
 
   return (
