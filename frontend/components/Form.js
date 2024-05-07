@@ -12,11 +12,11 @@ const validationErrors = {
 // 👇 Here you will create your schema.
 
 const formSchema = yup.object().shape({
-  fullName: yup.string()
+  fullName: yup.string().trim()
     .min(3,validationErrors.fullNameTooShort)
     .max(20, validationErrors.fullNameTooLong),
   size: yup.string()
-    .oneOf(['S', 'M', 'L]', ], validationErrors.sizeIncorrect),
+    .oneOf(['S', 'M', 'L'], validationErrors.sizeIncorrect),
   pepperoni: yup.boolean(),
   greenPeppers:  yup.boolean(),
   pineapple:  yup.boolean(),
@@ -63,8 +63,8 @@ export default function Form() {
 
 
   useEffect(() => {
-    formSchema.isValid(values).then((isValid) => {
-      setEnabled(isValid);
+    formSchema.isValid(values).then((enabled) => {
+      setEnabled(enabled);
     });
   }, [values]);
 
