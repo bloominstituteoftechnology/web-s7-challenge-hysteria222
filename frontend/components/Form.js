@@ -80,20 +80,32 @@ export default function Form() {
         });
   }
 
-  const createPayload = () => { 
-    const aa = []
-   
-   }
-   console.log(aa)
-   return aa
-  }
+ 
 
   
   const handleSubmit = (evt) => {
     evt.preventDefault();
-    const payload = createPayload()
+  
+      const aa = []
+     for(const prop in values){
+      if (values[prop] === true){
+        aa.push(prop)
+      }
+     }
+    const payloadID = aa.map(toppingName => {
+    const matchingTopping = toppings.find(topping => topping.text === toppingName)
+      if (matchingTopping) 
+        return matchingTopping.topping_id
+      })
+    const payload = {
+      fullName: values.fullName,
+      size: values.size,
+      toppings: payloadID
+     }
+   
+    
     axios
-      .post("http://localhost:9009/api/order", )
+      .post("http://localhost:9009/api/order", payload)
       .then((res) => {
         setSuccess(res.data.message);
         setFailure("");
@@ -137,15 +149,13 @@ export default function Form() {
         
        {toppings.map((topping) => {
         return (
-          <label>
+          <label  key={topping.id}>
           <input
             name={topping.text}
             type="checkbox"
-            key={topping.id}
             onChange={handleChange} 
             checked={values[topping.text]}
             value={values[topping.text]}
-            
           />
           {topping.text}<br />
         </label>
